@@ -3,7 +3,7 @@ This is an implementation of the paper FedSurrogate: Robust Backdoor Defense in 
 
 
 - **Attack Implementations:**
-  - Standard backdoor attacks
+  - Centralized backdoor attacks
   - Distributed Backdoor Attack (DBA)
   - Neurotoxin
 
