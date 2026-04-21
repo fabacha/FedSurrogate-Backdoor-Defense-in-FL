@@ -1,0 +1,155 @@
+# ============================================================
+#  Global Experiment Configuration
+# ============================================================
+model:            "resnet18"    # Options: "simple_cnn" | "CIFAR10Model" | "resnet8" | "resnet18"
+dataset_name:     "cifar10"         # Options: "mnist" | "cifar10" | "fmnist" | "cifar100"
+num_clients:       20
+num_malicious:     4
+malicious_clients: [1, 8, 9, 19]
+num_rounds:        100
+
+# ============================================================
+#  Global Attack Configuration
+# ============================================================
+apply_attack:      true
+attack_type:       "backdoor"           # Options: "backdoor" | "none"
+
+
+# ============================================================
+#  Defense Configuration
+# ============================================================
+defense:
+  enabled: true
+  type: "fedsurrogate"                      # Options: "fedsurrogate" | "foolsgold" | "flame" | "fedgrad" | "alignins" |  "spmc" | "flshield" | "snowball" | "oracle"
+
+
+
+  # FedSurrogate parameters
+  shrink_replace: 0.3
+  shrink_soft: 0.7
+  zeta: 0.4
+  use_deltas: true
+  n_clusters: 2
+  enable_lca: true                       # Toggle Layer Criticality Analysis (Stage 0)
+  lca_mode: "directional"                     # "l2_norm" (update magnitude) | "directional" (cosine divergence)
+  lca_top_k: 5                            # top-k layers
+  enable_rescue: true                     # Toggle rescue of false positives (Stage 2)
+  enable_replace: true                   # Toggle surrogate replacement (Stage 3)
+  replace_mode: "surgical"
+  rescue_layer_mode: "mid_deep"                # "lca" | "ultimate" | "mid_deep" | "fc_only" | "conv_fc" | "all"
+  selected_layers:
+    - "conv1.weight"
+
+
+
+  # AlignIns parameters
+  lambda_s: 1.0
+  lambda_c: 1.0
+  sparsity: 0.3
+  verbose: true
+
+  # FoolsGold parameters
+  recompute_mask: true
+
+
+
+  # FedGrad parameters
+  ultimate_weight: "fc2.weight"
+  ultimate_bias: "fc2.bias"
+  hard_start: 10
+  gamma: 0.75
+
+
+  # FLShield parameters (Kabir et al., IEEE S&P 2024)
+  val_dataset_size: 200             # server-held validation samples
+  val_batch_size: 64
+  start_round: 1                    # use FedAvg before this round
+  # num_classes: 10                 # auto-detected from data_partition.num_classes
+
+  # SPMC parameters (He et al., PMLR 2025)
+  # Server-side: cosine similarity + softmax weighting (no hyperparameters)
+  # Client-side aligned gradient:
+  spmc_lamda: 1.0               # gradient projection strength (1.0 = full 90-degree projection)
+  spmc_temperature: 1.0         # KL divergence temperature
+
+  # Snowball parameters (Qin et al., AAAI 2024)
+  layer_filters:
+    - "conv1.weight"
+    - "fc2.weight"
+  ct: 10                          # suspicious cluster count (K-means uses ct+1)
+  vt: 0.5                         # target fraction selected after top-down
+  v_step: 0.05                    # fraction added per expansion step
+  vae_initial: 270                # VAE initial training epochs
+  vae_tuning: 30                  # VAE fine-tuning epochs per step
+  vae_hidden: 256                 # VAE hidden dim
+  vae_latent: 64                  # VAE latent dim
+  warmup_rounds: 100              # top-down activates after this round
+
+  # Aggregation options
+  use_weighted_fedavg: true
+
+# ============================================================
+#  Aggregator Configuration (used when defense.enabled = false)
+# ============================================================
+aggregator:
+  type: "weighted"                      # Options: "weighted" | "fedavg"
+
+# ============================================================
+#  Client Configuration
+# ============================================================
+client_settings:
+  device: "cuda"                        # Options: "cuda" | "cpu"
+  learning_rate: 0.1
+  local_epochs: 2
+  batch_size: 32
+  mal_learning_rate: 0.1    # lower LR for stealthier but persistent poison
+  mal_local_epochs: 5      # more epochs to embed backdoor deeply
+  momentum: 0.0 #0.9
+  weight_decay: 0.0 #0.0005
+  total_clients: 20
+  num_malicious_clients: 4
+
+  # Neurotoxin (Zhang et al., ICML 2022)
+  use_neurotoxin: false
+  gradmask_ratio: 0.95    # keep bottom 95%, block top 5% heavy hitters
+
+    # Adaptive Critical Layer Replacement Attack
+  use_adaptive_cosine_clr_attack: false
+  aca_topk: 4
+
+  # LP Attack (Zhuang et al., 2023)
+  # "Backdoor FL by Poisoning Backdoor-Critical Layers"
+  # Uses FLS (Forward Layer Substitution) + BLS (Backward Layer Substitution)
+  # to identify minimal backdoor-critical layer set.
+  use_lp_attack: false
+  lp_tau: 0.8               # BLS threshold: stop when composite BSR >= τ * BSR_full
+  lp_benign_epochs: 5       # epochs to train benign reference model
+
+
+  # Backdoor attack parameters
+  poison_data_ratio: 0.3
+  backdoor_target: 1
+  backdoor_region_size: [3, 3]
+  backdoor_location: "bottom_right"
+  backdoor_color: [1.0, 0.0, 0.0]
+  trigger_type: "3x3"                   # Options: "1pixel" | "4pixel" | "3x3"
+
+  # Distributed backdoor attack (DBA)
+  distributed_backdoor: false
+  num_dba_clients: 4
+  pixels_per_client: 3
+
+  # Model replacement attack
+  model_replacement: false
+  model_replacement_scale: 5
+  mr_scale_mode: "count"                # Options: "count" | "weight"
+  mr_max_scale: 1000
+
+# ============================================================
+#  Data Partitioning Configuration
+# ============================================================
+data_partition:
+  strategy: "dirichlet"                 # Options: "iid" | "dirichlet"
+  dirichlet_alpha: 0.5
+  num_classes: 10
+  min_require_size: 20
