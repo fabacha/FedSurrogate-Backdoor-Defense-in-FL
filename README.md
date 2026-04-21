@@ -5,20 +5,23 @@ This is an implementation of the paper FedSurrogate: Robust Backdoor Defense in 
 - **Attack Implementations:**
   - Standard backdoor attacks
   - Distributed Backdoor Attack (DBA)
-  - Model Replacement (MR) attack
+  - Neurotoxin
 
 - **Defense Mechanisms:**
   - FedSurrogate (our proposed method)
   - FoolsGold
   - FLAME
   - FedGrad
-  - AlignIns
-  - Snowball (using authors' open implementation)
+  - FLSHIELD
+  - Snowball
+  - AlignIns  
+  - SPMC
 
 - **Datasets:**
   - MNIST
   - Fashion-MNIST
   - CIFAR-10
+  - CIFAR-100  
   
 
 ## Installation
@@ -70,7 +73,7 @@ python main.py --config config/default_config.yaml
 Edit `config.yaml` to customize experiments:
 ```yaml
 # Select dataset
-dataset_name: "cifar10"  # Options: mnist | cifar10 | fashion_mnist | emnist
+dataset_name: "cifar10"  # Options: mnist | cifar10 | fashion_mnist 
 
 # Select model
 model: "CIFAR10Model"    # Options: simple_cnn | CIFAR10Model |  resnet8
@@ -110,8 +113,6 @@ defense:
   recompute_mask: true
 ```
 
-```
-**Note:** Snowball defense uses the open-source implementation provided by the original authors. See the [Snowball paper](https://arxiv.org/abs/2012.09456) for methodology details.
 
 ## Data Partitioning
 
@@ -126,7 +127,7 @@ data_partition:
 
 ## Attack Configuration
 
-### Standard Backdoor Attack
+### Centralized Backdoor Attack
 ```yaml
 client_settings:
   poison_data_ratio: 0.3
@@ -143,13 +144,6 @@ client_settings:
   pixels_per_client: 3
 ```
 
-### Model Replacement Attack
-```yaml
-client_settings:
-  model_replacement: true
-  mr_scale_mode: "count"    # Options: count | weight
-  mr_max_scale: 1000
-```
 
 ## Output
 
@@ -163,7 +157,7 @@ Results are saved in the `results/` directory:
 
 The framework tracks:
 - **Main Task Accuracy:** Clean test set accuracy
-- **Backdoor Accuracy:** Attack effectiveness on poisoned samples
+- **Attack Success Rate:** Attack effectiveness on poisoned samples
 - **Detection Metrics:** True Positive Rate (TPR), False Positive Rate (FPR)
 
 
